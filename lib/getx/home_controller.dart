@@ -1,54 +1,37 @@
 import 'dart:convert';
-import 'dart:developer';
-
+import 'package:flutter_application_getxtest/beers_model.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
-import '../categoris_model.dart';
+import 'package:http/http.dart' as http;
+const baseUrl =
+    'https://api.sampleapis.com/beers/ale';
 
 class DataController extends GetxController {
-  CategoriesModel? categoriesModel;
 
-  var isDataLoading = false.obs;
-
+ List<BeersModel>? beers;
+  bool isDataLoading = false;
   @override
-  Future<void> onInit() async {
+  void onInit() {
     super.onInit();
-    getApi();
+    getBeersServices();
   }
 
-  @override
-  Future<void> onReady() async {
-    super.onReady();
+
+  
+   Future<List<BeersModel>> getBeersServices() async {
+      isDataLoading = true;
+    update();
+    http.Response response = await http.get(Uri.parse(baseUrl));
+    var json = jsonDecode(response.body);
+    FinalBeersModel data = FinalBeersModel.fromJson(json);
+    //  print(data.beersModelList);
+     isDataLoading = false;
+    update();
+    return data.beersModelList;
+  
+
+
+   }
+
   }
 
-  @override
-  void onClose() {}
-
-  getApi() async {
-    try {
-      isDataLoading(true);
-      http.Response response = await http.get(
-        Uri.tryParse('https://www.osoule.com/api/gloable/faqs')!,
-        headers: {
-          'api-token':
-              'eyJpdiI6Ilo4eThFeFBnMHIzN0hlSngwZ1ZEVVE9PSIsInZhbHVlIjoiL2ZBSENXY0ZBUXJYcmQ4U0VMcE9hQT09IiwibWFjIjoiY2NiMGViZjA0MTYwYmVmYjk0M2ViZTU0ZTVlZjlkZDQwNGJhMDc4NDljMjQ2MzQ4OTVhZmIyNGNiMTdhM2EzOSJ9',
-          'lang': 'en'
-        },
-      );
-      if (response.statusCode == 200) {
-        ///data successfully
-        var result = jsonDecode(response.body);
-
-        categoriesModel = CategoriesModel.fromJson(result);
-      } else {
-        ///error
-      }
-    } catch (e) {
-      log('Error while getting data is $e');
-      print('Error while getting data is $e');
-    } finally {
-      isDataLoading(false);
-    }
-  }
-}
